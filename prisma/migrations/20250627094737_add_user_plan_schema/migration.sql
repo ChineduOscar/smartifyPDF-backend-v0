@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "UserPlan" ALTER COLUMN "paymentId" DROP NOT NULL,
+ALTER COLUMN "endDate" DROP NOT NULL;

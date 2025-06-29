@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String   @id @default(uuid())
+  email                 String   @unique
+  emailVerified         Boolean  @default(false)
+  verificationCode      String?
+  verificationCodeExpires DateTime?
+  firstName             String
+  lastName              String
+  password              String
+  role                  Role     @default(STUDENT)
+  profilePicture        String?
+  country               String?
+  targetLanguage        String?
+  ageRange              String?
+  phoneNumber           String?
+  reasonForLearning     String?
+  gender                Gender?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  resetTokens           PasswordResetToken[]
+  payments              Payment[]
+  refreshTokens         RefreshToken[]
+  userPlans             UserPlan[]
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Plan {
+  id              String   @id @default(uuid())
+  title           String
+  price           Int
+  discount        Int 
+  features        String[]
+  buttonText      String
+  durationInDays  Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  payments        Payment[]
+  userPlans       UserPlan[]
+}
+
+model Payment {
+  id                        String   @id @default(uuid())
+  txRef                     String   @unique
+  amount                    Int
+  email                     String
+  planId                    String
+  userId                    String
+  status                    PaymentStatus @default(PENDING)
+  flutterwaveTransactionId  String?
+  flutterwaveReference      String?
+  flutterwaveData           Json?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  userPlans                 UserPlan[]
+
+  user   User?   @relation(fields: [userId], references: [id])
+  plan   Plan?   @relation(fields: [planId], references: [id])
+}
+
+model UserPlan {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  planId      String
+  paymentId   String?   @unique
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  payment     Payment?  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+}
+
+model TeacherApplication {
+  id                String    @id @default(uuid())
+  firstName         String
+  lastName          String
+  email             String    @unique
+  gender            String
+  country           String
+  phoneNumber       String
+  languagesSpoken   String[]           
+  languagesTaught   String[]            
+  experience        String              
+  bio               String
+  cvDocument        String
+  whyTeachWithUs    String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  PREFER_NOT_TO_SAY
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
