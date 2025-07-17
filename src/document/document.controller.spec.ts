@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TeacherApplicationController } from './teacher-application.controller';
+import { TeacherApplicationController } from './document.controller';
 
 describe('TeacherApplicationController', () => {
   let controller: TeacherApplicationController;
@@ -9,7 +9,9 @@ describe('TeacherApplicationController', () => {
       controllers: [TeacherApplicationController],
     }).compile();
 
-    controller = module.get<TeacherApplicationController>(TeacherApplicationController);
+    controller = module.get<TeacherApplicationController>(
+      TeacherApplicationController,
+    );
   });
 
   it('should be defined', () => {

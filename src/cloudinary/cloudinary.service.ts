@@ -14,14 +14,14 @@ export class CloudinaryService {
 
   async uploadFile(
     file: Express.Multer.File,
-    folder: string = 'teacher-cvs',
+    folder: string = 'document-upload-v0',
   ): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
       cloudinary.uploader
         .upload_stream(
           {
             folder: folder,
-            resource_type: 'auto',
+            resource_type: 'raw',
           },
           (error, result) => {
             if (error) {
