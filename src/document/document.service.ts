@@ -1,14 +1,17 @@
 import { Injectable, BadRequestException, HttpException } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { QuizService } from 'src/quiz/quiz.service';
+import axios from 'axios';
 
 @Injectable()
 export class DocumentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
+    private readonly quizService: QuizService,
   ) {}
-  async apply(file: Express.Multer.File) {
+  async uploadAndGenerate(file: Express.Multer.File) {
     try {
       const allowedMimeTypes = [
         'application/pdf',
@@ -30,16 +33,31 @@ export class DocumentService {
       const document = await this.prisma.anonymousDocument.create({
         data: {
           documentUrl: documentUploadResult.secure_url,
+          documentName: file.originalname,
           publicId: documentUploadResult.public_id,
-          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
         },
       });
 
-      return {
-        message: 'Document uplaoded successfully',
-        data: {
-          id: document.id,
+      const aiResponse = await axios.post(
+        'http://localhost:5000/quiz/generate',
+        {
           document_url: document.documentUrl,
+        },
+      );
+
+      const { document_info, questions, success } = aiResponse.data;
+
+      if (!success || !questions?.length) {
+        throw new BadRequestException('AI failed to generate questions');
+      }
+
+      const result = await this.quizService.store({ questions, document_info });
+
+      return {
+        message: 'Document uploaded and quiz generated',
+        data: {
+          ...result,
+          documentName: document.documentName,
         },
       };
     } catch (error) {

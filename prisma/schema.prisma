@@ -23,9 +23,35 @@ model ContactMessage {
 }
 
 model AnonymousDocument {
-  id          String   @id @default(uuid())
-  documentUrl String
-  publicId    String
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime
+  id            String          @id @default(uuid())
+  documentUrl   String          @unique
+  publicId      String
+  documentName  String
+  textLength    Int?
+  tokenCount    Int?
+  createdAt     DateTime        @default(now())
+  quizzes       GeneratedQuiz[]
+}
+
+// GeneratedQuiz contains all quiz questions.
+model GeneratedQuiz {
+  id               String              @id @default(uuid())
+  documentId       String
+  totalQuestions   Int
+  createdAt        DateTime            @default(now())
+  document         AnonymousDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  questions        GeneratedQuestion[]
+}
+
+// Contains a single quiz question.
+model GeneratedQuestion {
+  id              String   @id @default(uuid())
+  quizId          String
+  question        String
+  questionNumber  Int
+  options         String[]
+  correctAnswer   Int
+  explanation     String
+
+  quiz            GeneratedQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
 }

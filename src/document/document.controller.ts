@@ -15,14 +15,14 @@ import { DocumentService } from './document.service';
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
 
-  @Post('upload')
+  @Post('upload-and-generate')
   @UseInterceptors(FileInterceptor('document'))
-  async apply(@UploadedFile() file: Express.Multer.File) {
+  async uploadAndGerate(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Document file is required');
     }
 
-    return this.documentService.apply(file);
+    return this.documentService.uploadAndGenerate(file);
   }
 
   @Get()
