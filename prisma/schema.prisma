@@ -41,6 +41,7 @@ model GeneratedQuiz {
   createdAt        DateTime            @default(now())
   document         AnonymousDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
   questions        GeneratedQuestion[]
+  results          QuizResult[]
 }
 
 // Contains a single quiz question.
@@ -54,4 +55,19 @@ model GeneratedQuestion {
   explanation     String
 
   quiz            GeneratedQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
+
+model QuizResult {
+  id             String   @id @default(uuid())
+  quizId         String
+  mode           String 
+  score          Int
+  percentage     Int
+  totalQuestions Int
+  correctAnswers Int
+  incorrectAnswers Int
+  createdAt      DateTime @default(now())
+  questions      Json
+
+  quiz           GeneratedQuiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
 }

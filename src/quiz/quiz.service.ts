@@ -4,7 +4,7 @@ import {
   HttpException,
   NotFoundException,
 } from '@nestjs/common';
-import { StoreQuizDto } from 'src/dto';
+import { StoreQuizDto, SubmitQuizDto } from 'src/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as PDFDocument from 'pdfkit';
 import { PassThrough } from 'stream';
@@ -284,5 +284,64 @@ export class QuizService {
       default:
         throw new BadRequestException('Unsupported file format');
     }
+  }
+  async storeQuizResult(dto: SubmitQuizDto) {
+    try {
+      const total = dto.answers.length;
+
+      let correct = 0;
+
+      const questions = dto.answers.map((ans) => {
+        const isCorrect = ans.selectedOptionIndex === ans.correctOptionIndex;
+        if (isCorrect) correct++;
+
+        return {
+          questionId: ans.questionId,
+          isCorrect,
+          selectedOptionIndex: ans.selectedOptionIndex,
+          correctOptionIndex: ans.correctOptionIndex,
+        };
+      });
+
+      const percentage = Math.round((correct / total) * 100);
+
+      const result = await this.prisma.quizResult.create({
+        data: {
+          quizId: dto.quizId,
+          mode: dto.mode,
+          score: correct,
+          percentage,
+          totalQuestions: total,
+          correctAnswers: correct,
+          incorrectAnswers: total - correct,
+          questions,
+        },
+      });
+
+      return result;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        'An error occurred on our end. Please try again.',
+      );
+    }
+  }
+
+  async getQuizResults(quizId: string, mode?: 'study' | 'exam') {
+    const result = await this.prisma.quizResult.findFirst({
+      where: {
+        quizId,
+        ...(mode ? { mode } : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!result) {
+      throw new NotFoundException('Quiz result not found');
+    }
+
+    return result;
   }
 }

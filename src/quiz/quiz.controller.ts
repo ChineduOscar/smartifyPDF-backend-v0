@@ -9,13 +9,14 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { QuizService } from './quiz.service';
+import { StoreQuizDto, SubmitQuizDto } from 'src/dto';
 
 @Controller('quiz')
 export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
   @Post('store')
-  async store(@Body() body: any) {
+  async store(@Body() body: StoreQuizDto) {
     return this.quizService.store(body);
   }
 
@@ -51,5 +52,17 @@ export class QuizController {
       });
     }
     throw new BadRequestException('Invalid format');
+  }
+  @Post('submit-quiz')
+  async storeQuizResult(@Body() body: SubmitQuizDto) {
+    return this.quizService.storeQuizResult(body);
+  }
+
+  @Get(':quizId/results')
+  async getResults(
+    @Param('quizId') quizId: string,
+    @Query('mode') mode?: 'study' | 'exam',
+  ) {
+    return this.quizService.getQuizResults(quizId, mode);
   }
 }
