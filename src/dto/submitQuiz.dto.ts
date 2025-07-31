@@ -28,6 +28,9 @@ export class SubmitQuizDto {
   @IsEnum(['study', 'exam'])
   mode: 'study' | 'exam';
 
+  @IsNumber()
+  totalQuestions: number;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => AnswerDto)

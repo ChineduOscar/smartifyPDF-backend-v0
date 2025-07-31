@@ -69,5 +69,6 @@ model QuizResult {
   createdAt      DateTime @default(now())
   questions      Json
 
+
   quiz           GeneratedQuiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
 }

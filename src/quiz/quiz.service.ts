@@ -287,8 +287,7 @@ export class QuizService {
   }
   async storeQuizResult(dto: SubmitQuizDto) {
     try {
-      const total = dto.answers.length;
-
+      const total = dto.totalQuestions;
       let correct = 0;
 
       const questions = dto.answers.map((ans) => {
@@ -336,12 +335,46 @@ export class QuizService {
         ...(mode ? { mode } : {}),
       },
       orderBy: { createdAt: 'desc' },
+      include: {
+        quiz: {
+          include: {
+            document: true,
+            questions: true, 
+          },
+        },
+      },
     });
 
     if (!result) {
       throw new NotFoundException('Quiz result not found');
     }
 
-    return result;
+    const resultMap = new Map(
+      (result.questions as any[]).map((q) => [q.questionId, q]),
+    );
+
+    const enrichedQuestions = result.quiz.questions.map((q) => {
+      const match = resultMap.get(q.id);
+      return {
+        id: q.id,
+        question: q.question,
+        options: q.options,
+        correctAnswerIndex: q.correctAnswer,
+        explanation: q.explanation,
+        selectedOptionIndex: match?.selectedOptionIndex ?? null,
+        isCorrect: match?.isCorrect ?? false,
+      };
+    });
+
+    return {
+      quizId: result.quizId,
+      score: result.score,
+      percentage: result.percentage,
+      totalQuestions: result.totalQuestions,
+      correctAnswers: result.correctAnswers,
+      incorrectAnswers: result.incorrectAnswers,
+      documentName: result.quiz.document.documentName,
+      questions: enrichedQuestions,
+    };
   }
 }
